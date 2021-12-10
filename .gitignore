@@ -1,7 +1,9 @@
-!.gitignore
-!Editor/
 Scenes/
 *.meta
 *.cs
 SerializedDictionaryData
+
+!.gitignore
+!Editor/*.cs
+!Editor/
 
