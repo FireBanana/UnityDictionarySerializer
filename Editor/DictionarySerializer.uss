@@ -1,0 +1,14 @@
+Label 
+{
+    white-space: normal;
+}
+
+#root
+{
+    padding: 10px;
+}
+
+#root > *
+{
+    margin: 5px 0px;
+}

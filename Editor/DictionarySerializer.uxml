@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+    <Style src="DictionarySerializer.uss"/>
+    
+    <engine:VisualElement name="root">
+        <engine:Label text="Add the script that contains the dictionaries" />
+
+        <editor:ObjectField 
+        name="field"
+        type="UnityEngine.MonoBehaviour, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+        />
+
+        <engine:ListView name="list">
+        </engine:ListView>
+
+    </engine:VisualElement>    
+
+</engine:UXML>
