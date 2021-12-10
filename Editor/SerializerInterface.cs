@@ -31,24 +31,39 @@ namespace DSerializer
 
         public static void SaveData(DictionarySerializedData data)
         {
+            var currentData = LoadData();
+
             using (TextWriter stream = new StreamWriter(Application.dataPath + "/SerializedDictionaryData"))
             {
-                var currentData          = LoadData();
                 XmlSerializer serializer = new XmlSerializer(typeof(SerializedData));
 
-                currentData.DataList.Add(data);
+                if (currentData.HasValue)
+                {
+                    currentData?.DataList.Add(data);
+                    serializer.Serialize(stream, currentData);
+                }
+                else
+                {
+                    var newData = new SerializedData();
 
-                serializer.Serialize(stream, data);
+                    newData.DataList = new List<DictionarySerializedData>();
+                    newData.DataList.Add(data);
+
+                    serializer.Serialize(stream, newData);
+                }
             }
         }
 
-        public static SerializedData LoadData()
+        public static SerializedData? LoadData()
         {
-            using (StreamReader stream = new StreamReader(Application.dataPath + "/SerializedDictionaryData"))
+            if (!File.Exists(Application.dataPath + "/SerializedDictionaryData"))
+                return null;
+
+            using (TextReader stream = new StreamReader(Application.dataPath + "/SerializedDictionaryData"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(SerializedData));
 
-                return (SerializedData)serializer.Deserialize(stream.BaseStream);
+                return (SerializedData)serializer.Deserialize(stream);
             }
         }
     }

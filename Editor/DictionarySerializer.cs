@@ -70,7 +70,11 @@ namespace DSerializer
 
             if (dict == null)
             {
-                var data = SerializerInterface.LoadData(script.GetInstanceID());
+                var a = new DictionarySerializedData();
+                a.SceneName = "Scene1";
+                a.ScriptInstanceId = 1;
+
+                SerializerInterface.SaveData(a);
             }
 
             foreach (var entry in dict)
