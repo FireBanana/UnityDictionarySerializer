@@ -7,6 +7,8 @@ using System;
 using System.Reflection;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using System.Linq;
+
 using static DSerializer.SerializerInterface;
 
 namespace DSerializer
@@ -34,6 +36,11 @@ namespace DSerializer
             _uxmlTree.Query<ObjectField>("field").First().RegisterValueChangedCallback(
                 (changeEvent) =>
                 {
+                    _uxmlTree.Query<ListView>().First().hierarchy.Clear();
+
+                    if (changeEvent.newValue == null)
+                        return;
+
                     foreach (var field in changeEvent.newValue
                                             .GetType()
                                             .GetFields(BindingFlags.Instance | BindingFlags.Public))
@@ -54,34 +61,47 @@ namespace DSerializer
             root.Add(_uxmlTree);
         }
 
+
+        //Might need to move to monobehavior for in-game update
         private void DisplayList<T>(FieldInfo dictField, MonoBehaviour instance) where T : MonoBehaviour
         {
             var type1 = dictField.FieldType.GetGenericArguments()[0];
             var type2 = dictField.FieldType.GetGenericArguments()[1];
 
-            var keyElement = ResolveElement(type1);
-            var valueElement = ResolveElement(type2);
-
             var listView = _uxmlTree.Query<ListView>().First();
 
             var script = (T)instance;
 
-            IDictionary dict = (IDictionary)dictField.GetValue(script);
+            //IDictionary dict = (IDictionary)dictField.GetValue(script);
 
-            if (dict == null)
+            SerializerInterface.SaveData(new DictionarySerializedData() 
+            { 
+                SceneName = "Peener",
+                ScriptInstanceId = 2,
+                Dictionaries = new List<SerializableDictionary>() 
+                {
+                    new SerializableDictionary(),
+                    new SerializableDictionary(),
+                    new SerializableDictionary(),
+                    new SerializableDictionary(),
+                    new SerializableDictionary()
+                }
+            });
+
+            var data = SerializerInterface.LoadData();
+
+            if (data.HasValue)
             {
-                var a = new DictionarySerializedData();
-                a.SceneName = "Scene1";
-                a.ScriptInstanceId = 1;
+                var query = data.Value.DataList
+                    .Where(x => x.ScriptInstanceId == 2)
+                    .First();
 
-                SerializerInterface.SaveData(a);
-            }
-
-            foreach (var entry in dict)
-            {
-                listView.hierarchy.Add(keyElement);
-                listView.hierarchy.Add(valueElement);
-            }
+                foreach (var entry in query.Dictionaries)
+                {
+                    listView.hierarchy.Add(ResolveElement(type1));
+                    listView.hierarchy.Add(ResolveElement(type2));
+                }
+            }            
 
             rootVisualElement.MarkDirtyRepaint();
         }
