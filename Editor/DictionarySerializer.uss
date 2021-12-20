@@ -12,3 +12,16 @@ Label
 {
     margin: 5px 0px;
 }
+
+.entry
+{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.entry-field
+{
+    width: auto;
+    flex-grow: 1;
+}

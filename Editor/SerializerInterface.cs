@@ -16,7 +16,7 @@ namespace DSerializer
             public List<object>                             Values;
         }
 
-        public struct DictionarySerializedData
+        public struct SerializedScript
         {
             public int                                      ScriptInstanceId;
             public string                                   SceneName;
@@ -26,10 +26,10 @@ namespace DSerializer
 
         public struct SerializedData
         {
-            public List<DictionarySerializedData>           DataList;
+            public List<SerializedScript>           DataList;
         }
 
-        public static void SaveData(DictionarySerializedData data)
+        public static void SaveData(SerializedScript data)
         {
             var currentData = LoadData();
 
@@ -46,7 +46,7 @@ namespace DSerializer
                 {
                     var newData = new SerializedData();
 
-                    newData.DataList = new List<DictionarySerializedData>();
+                    newData.DataList = new List<SerializedScript>();
                     newData.DataList.Add(data);
 
                     serializer.Serialize(stream, newData);

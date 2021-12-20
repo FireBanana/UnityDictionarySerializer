@@ -62,7 +62,18 @@ namespace DSerializer
         }
 
 
-        //Might need to move to monobehavior for in-game update
+        private VisualElement MakeEntry(VisualElement field1, VisualElement field2)
+        {
+            var element = new VisualElement();
+            element.AddToClassList("entry");
+
+            element.Add(field1);
+            element.Add(field2);
+
+            return element;
+        }
+
+        //TODO Might need to move to monobehavior for in-game update
         private void DisplayList<T>(FieldInfo dictField, MonoBehaviour instance) where T : MonoBehaviour
         {
             var type1 = dictField.FieldType.GetGenericArguments()[0];
@@ -72,36 +83,65 @@ namespace DSerializer
 
             var script = (T)instance;
 
-            //IDictionary dict = (IDictionary)dictField.GetValue(script);
-
-            SerializerInterface.SaveData(new DictionarySerializedData() 
-            { 
-                SceneName = "Peener",
-                ScriptInstanceId = 2,
-                Dictionaries = new List<SerializableDictionary>() 
-                {
-                    new SerializableDictionary(),
-                    new SerializableDictionary(),
-                    new SerializableDictionary(),
-                    new SerializableDictionary(),
-                    new SerializableDictionary()
-                }
-            });
-
             var data = SerializerInterface.LoadData();
 
             if (data.HasValue)
             {
                 var query = data.Value.DataList
-                    .Where(x => x.ScriptInstanceId == 2)
+                    .Where(x => x.ScriptInstanceId == script.GetInstanceID())
                     .First();
 
                 foreach (var entry in query.Dictionaries)
                 {
-                    listView.hierarchy.Add(ResolveElement(type1));
-                    listView.hierarchy.Add(ResolveElement(type2));
+                    listView.hierarchy.Add(MakeEntry(ResolveElement(type1), ResolveElement(type2)));
                 }
-            }            
+            }
+
+            listView.hierarchy.Add(new Label("Add New: "));
+            listView.hierarchy.Add(MakeEntry(ResolveElement(type1), ResolveElement(type2)));
+
+            var addButton = new Button();
+            addButton.Add(new Label("ADD"));
+            addButton.clicked += () => 
+            {
+                //TODO check if data not available
+                var existingScript = data?.DataList.Find(x => x.ScriptInstanceId == script.GetInstanceID());
+
+                if (existingScript == null)
+                {
+                    Debug.Log("No previous script found");
+                    existingScript = new SerializedScript()
+                    {
+                        ScriptInstanceId = script.GetInstanceID(),
+                        SceneName = SceneManager.GetActiveScene().name,
+                        Dictionaries = new List<SerializableDictionary>()
+                    };
+                }
+
+                var existingDictionary = existingScript?.Dictionaries.FirstOrDefault(x => x.DictionaryName == dictField.Name);
+
+                if (existingDictionary.Equals(default(SerializableDictionary)))
+                {
+                    Debug.Log("No previous dictionary entry found");
+
+                    existingDictionary = new SerializableDictionary()
+                    {
+                        DictionaryName = dictField.Name,
+                        Keys = new List<object>(),
+                        Values = new List<object>()
+                    };
+                }
+
+                //TODO Add real field values
+                existingDictionary?.Keys.Add("FIELD 1 HERE");
+                existingDictionary?.Values.Add("FIELD 2 HERE");
+
+                existingScript?.Dictionaries.Add(existingDictionary.Value);
+
+                SerializerInterface.SaveData(existingScript.Value);
+            };
+
+            listView.hierarchy.Add(addButton);
 
             rootVisualElement.MarkDirtyRepaint();
         }
@@ -111,13 +151,25 @@ namespace DSerializer
             switch (type)
             {
                 case Type intType when intType == typeof(int):
-                    return new IntegerField();
+                    {
+                        var i = new IntegerField();
+                        i.AddToClassList("entry-field");
+                        return i;
+                    }
 
                 case Type floatType when floatType == typeof(float):
-                    return new FloatField();
+                    {
+                        var i = new FloatField();
+                        i.AddToClassList("entry-field");
+                        return i;
+                    }
 
                 case Type stringType when stringType == typeof(string):
-                    return new TextField();
+                    {
+                        var i = new TextField();
+                        i.AddToClassList("entry-field");
+                        return i;
+                    }
 
                 default:
                     return new Label("Unknown Type");
