@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using UnityEngine;
@@ -39,7 +40,16 @@ namespace DSerializer
 
                 if (currentData.HasValue)
                 {
-                    currentData?.DataList.Add(data);
+                    var script = currentData?.DataList.First(x => x.ScriptInstanceId == data.ScriptInstanceId);
+
+                    if(script != null)
+                    {
+                        var index = currentData.Value.DataList.IndexOf(script.Value);
+                        currentData.Value.DataList[index] = data;
+                    }
+                    else
+                        currentData.Value.DataList.Add(data);             
+
                     serializer.Serialize(stream, currentData);
                 }
                 else

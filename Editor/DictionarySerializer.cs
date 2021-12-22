@@ -93,12 +93,20 @@ namespace DSerializer
 
                 foreach (var entry in query.Dictionaries)
                 {
-                    listView.hierarchy.Add(MakeEntry(ResolveElement(type1), ResolveElement(type2)));
+                    listView.hierarchy.Add(
+                        MakeEntry(
+                            DictionarySerializerGenericExtensions.ResolveElement(type1),
+                            DictionarySerializerGenericExtensions.ResolveElement(type2)
+                            )
+                        );
                 }
             }
 
             listView.hierarchy.Add(new Label("Add New: "));
-            listView.hierarchy.Add(MakeEntry(ResolveElement(type1), ResolveElement(type2)));
+
+            var newEntryKey = DictionarySerializerGenericExtensions.ResolveElement(type1);
+            var newEntryValue = DictionarySerializerGenericExtensions.ResolveElement(type2);
+            listView.hierarchy.Add(MakeEntry(newEntryKey, newEntryValue));
 
             var addButton = new Button();
             addButton.Add(new Label("ADD"));
@@ -107,9 +115,10 @@ namespace DSerializer
                 //TODO check if data not available
                 var existingScript = data?.DataList.Find(x => x.ScriptInstanceId == script.GetInstanceID());
 
-                if (existingScript == null)
+                if (existingScript.Equals(default(SerializedScript)))
                 {
                     Debug.Log("No previous script found");
+
                     existingScript = new SerializedScript()
                     {
                         ScriptInstanceId = script.GetInstanceID(),
@@ -133,9 +142,10 @@ namespace DSerializer
                 }
 
                 //TODO Add real field values
-                existingDictionary?.Keys.Add("FIELD 1 HERE");
-                existingDictionary?.Values.Add("FIELD 2 HERE");
+                existingDictionary?.Keys.Add(DictionarySerializerGenericExtensions.GetFieldValue(type1, newEntryKey));
+                existingDictionary?.Values.Add(DictionarySerializerGenericExtensions.GetFieldValue(type2, newEntryValue));
 
+                existingScript?.Dictionaries.RemoveAll(x => x.DictionaryName == dictField.Name);
                 existingScript?.Dictionaries.Add(existingDictionary.Value);
 
                 SerializerInterface.SaveData(existingScript.Value);
@@ -144,36 +154,6 @@ namespace DSerializer
             listView.hierarchy.Add(addButton);
 
             rootVisualElement.MarkDirtyRepaint();
-        }
-
-        private VisualElement ResolveElement(Type type)
-        {
-            switch (type)
-            {
-                case Type intType when intType == typeof(int):
-                    {
-                        var i = new IntegerField();
-                        i.AddToClassList("entry-field");
-                        return i;
-                    }
-
-                case Type floatType when floatType == typeof(float):
-                    {
-                        var i = new FloatField();
-                        i.AddToClassList("entry-field");
-                        return i;
-                    }
-
-                case Type stringType when stringType == typeof(string):
-                    {
-                        var i = new TextField();
-                        i.AddToClassList("entry-field");
-                        return i;
-                    }
-
-                default:
-                    return new Label("Unknown Type");
-            }
         }
    
     }
