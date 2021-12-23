@@ -83,66 +83,39 @@ namespace DSerializer
 
             var script = (T)instance;
 
-            var data = SerializerInterface.LoadData();
+            var data = SetUpData(script.GetInstanceID(), dictField.Name);
 
-            if (!data.Equals(default(SerializedData)))
-            {
-                var query = data.DataList
-                    .Where(x => x.ScriptInstanceId == script.GetInstanceID())
-                    .First();
+            var existingScript = data.DataList
+                .FirstOrDefault(x => x.ScriptInstanceId == script.GetInstanceID());
 
-                foreach (var entry in query.Dictionaries)
-                {
-                    listView.hierarchy.Add(
-                        MakeEntry(
-                            DictionarySerializerGenericExtensions.ResolveElement(type1),
-                            DictionarySerializerGenericExtensions.ResolveElement(type2)
-                            )
-                        );
-                }
-            }
-            else 
+            var existingDictionary = existingScript.Dictionaries
+                .FirstOrDefault(x => x.DictionaryName == dictField.Name);
+
+            for(int i = 0; i < existingDictionary.Keys.Count; i++)
             {
-                data.DataList = new List<SerializedScript>();
+                listView.hierarchy.Add(
+                    MakeEntry(
+                        DictionarySerializerGenericExtensions.SetUpField(type1, existingDictionary.Keys[i]),
+                        DictionarySerializerGenericExtensions.SetUpField(type2, existingDictionary.Values[i])
+                        )
+                    );
             }
 
+            var space = new VisualElement();
+            space.name = "space";
+
+            listView.hierarchy.Add(space);
             listView.hierarchy.Add(new Label("Add New: "));
 
-            var newEntryKey = DictionarySerializerGenericExtensions.ResolveElement(type1);
-            var newEntryValue = DictionarySerializerGenericExtensions.ResolveElement(type2);
+            var newEntryKey = DictionarySerializerGenericExtensions.SetUpField(type1, 0);
+            var newEntryValue = DictionarySerializerGenericExtensions.SetUpField(type2, 0);
             listView.hierarchy.Add(MakeEntry(newEntryKey, newEntryValue));
 
             var addButton = new Button();
             addButton.Add(new Label("ADD"));
             addButton.clicked += () => 
             {
-                var existingScript = data.DataList.FirstOrDefault(x => x.ScriptInstanceId == script.GetInstanceID());
-
-                if (existingScript.Equals(default(SerializedScript)))
-                {
-                    Debug.Log("No previous script found");
-
-                    existingScript = new SerializedScript()
-                    {
-                        ScriptInstanceId = script.GetInstanceID(),
-                        SceneName = SceneManager.GetActiveScene().name,
-                        Dictionaries = new List<SerializableDictionary>()
-                    };
-                }
-
-                var existingDictionary = existingScript.Dictionaries.FirstOrDefault(x => x.DictionaryName == dictField.Name);
-
-                if (existingDictionary.Equals(default(SerializableDictionary)))
-                {
-                    Debug.Log("No previous dictionary entry found");
-
-                    existingDictionary = new SerializableDictionary()
-                    {
-                        DictionaryName = dictField.Name,
-                        Keys = new List<object>(),
-                        Values = new List<object>()
-                    };
-                }
+                //TODO remove constant saving and add an APPLY button to save changes
 
                 existingDictionary.Keys.Add(DictionarySerializerGenericExtensions.GetFieldValue(type1, newEntryKey));
                 existingDictionary.Values.Add(DictionarySerializerGenericExtensions.GetFieldValue(type2, newEntryValue));
@@ -161,5 +134,53 @@ namespace DSerializer
             rootVisualElement.MarkDirtyRepaint();
         }
    
+        private SerializedData SetUpData(int instanceID, string dictionaryName)
+        {
+            var data = SerializerInterface.LoadData();
+
+            if (data.Equals(default(SerializedData)))
+            {
+                Debug.Log("No previous data found. A new structure will be created.");
+
+                data.DataList = new List<SerializedScript>();
+            }
+
+            var existingScript = data.DataList
+                    .FirstOrDefault(x => x.ScriptInstanceId == instanceID);
+
+            if (existingScript.Equals(default(SerializedScript)))
+            {
+                Debug.Log("No previous script instance found. A new one will be created.");
+
+                existingScript = new SerializedScript()
+                {
+                    ScriptInstanceId = instanceID,
+                    SceneName = SceneManager.GetActiveScene().name,
+                    Dictionaries = new List<SerializableDictionary>()
+                };
+            }
+
+            var existingDictionary = existingScript.Dictionaries
+                .FirstOrDefault(x => x.DictionaryName == dictionaryName);
+
+            if (existingDictionary.Equals(default(SerializableDictionary)))
+            {
+                Debug.Log("No previous dictionary entry found. A new one will be created");
+
+                existingDictionary = new SerializableDictionary()
+                {
+                    DictionaryName = dictionaryName,
+                    Keys = new List<object>(),
+                    Values = new List<object>()
+                };
+
+                existingScript.Dictionaries.Add(existingDictionary);
+            }
+
+            data.DataList.Add(existingScript);
+
+            return data;
+        }
+    
     }
 }

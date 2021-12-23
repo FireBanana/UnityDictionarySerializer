@@ -20,6 +20,11 @@ Label
     width: 100%;
 }
 
+#space
+{
+    margin: 10px 0px;
+}
+
 .entry-field
 {
     width: auto;

@@ -6,13 +6,14 @@ namespace DSerializer
 {
     public static class DictionarySerializerGenericExtensions
     {
-        public static VisualElement ResolveElement(Type type)
+        public static VisualElement SetUpField(Type type, object value)
         {
             switch (type)
             {
                 case Type intType when intType == typeof(int):
                     {
                         var i = new IntegerField();
+                        i.value = (int)value;
                         i.AddToClassList("entry-field");
                         return i;
                     }
@@ -20,6 +21,7 @@ namespace DSerializer
                 case Type floatType when floatType == typeof(float):
                     {
                         var i = new FloatField();
+                        i.value = (float)value;
                         i.AddToClassList("entry-field");
                         return i;
                     }
@@ -27,6 +29,7 @@ namespace DSerializer
                 case Type stringType when stringType == typeof(string):
                     {
                         var i = new TextField();
+                        i.value = (string)value;
                         i.AddToClassList("entry-field");
                         return i;
                     }
