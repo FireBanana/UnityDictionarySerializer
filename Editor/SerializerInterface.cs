@@ -30,44 +30,20 @@ namespace DSerializer
             public List<SerializedScript>           DataList;
         }
 
-        public static void SaveData(SerializedScript data)
+        public static void SaveData(SerializedData data)
         {
-            var currentData = LoadData();
-
             using (TextWriter stream = new StreamWriter(Application.dataPath + "/SerializedDictionaryData"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(SerializedData));
 
-                if (currentData.HasValue)
-                {
-                    var script = currentData?.DataList.First(x => x.ScriptInstanceId == data.ScriptInstanceId);
-
-                    if(script != null)
-                    {
-                        var index = currentData.Value.DataList.IndexOf(script.Value);
-                        currentData.Value.DataList[index] = data;
-                    }
-                    else
-                        currentData.Value.DataList.Add(data);             
-
-                    serializer.Serialize(stream, currentData);
-                }
-                else
-                {
-                    var newData = new SerializedData();
-
-                    newData.DataList = new List<SerializedScript>();
-                    newData.DataList.Add(data);
-
-                    serializer.Serialize(stream, newData);
-                }
+                serializer.Serialize(stream, data);
             }
         }
 
-        public static SerializedData? LoadData()
+        public static SerializedData LoadData()
         {
             if (!File.Exists(Application.dataPath + "/SerializedDictionaryData"))
-                return null;
+                return default(SerializedData);
 
             using (TextReader stream = new StreamReader(Application.dataPath + "/SerializedDictionaryData"))
             {

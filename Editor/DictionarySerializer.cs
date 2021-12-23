@@ -85,9 +85,9 @@ namespace DSerializer
 
             var data = SerializerInterface.LoadData();
 
-            if (data.HasValue)
+            if (!data.Equals(default(SerializedData)))
             {
-                var query = data.Value.DataList
+                var query = data.DataList
                     .Where(x => x.ScriptInstanceId == script.GetInstanceID())
                     .First();
 
@@ -101,6 +101,10 @@ namespace DSerializer
                         );
                 }
             }
+            else 
+            {
+                data.DataList = new List<SerializedScript>();
+            }
 
             listView.hierarchy.Add(new Label("Add New: "));
 
@@ -112,8 +116,7 @@ namespace DSerializer
             addButton.Add(new Label("ADD"));
             addButton.clicked += () => 
             {
-                //TODO check if data not available
-                var existingScript = data?.DataList.Find(x => x.ScriptInstanceId == script.GetInstanceID());
+                var existingScript = data.DataList.FirstOrDefault(x => x.ScriptInstanceId == script.GetInstanceID());
 
                 if (existingScript.Equals(default(SerializedScript)))
                 {
@@ -127,7 +130,7 @@ namespace DSerializer
                     };
                 }
 
-                var existingDictionary = existingScript?.Dictionaries.FirstOrDefault(x => x.DictionaryName == dictField.Name);
+                var existingDictionary = existingScript.Dictionaries.FirstOrDefault(x => x.DictionaryName == dictField.Name);
 
                 if (existingDictionary.Equals(default(SerializableDictionary)))
                 {
@@ -141,14 +144,16 @@ namespace DSerializer
                     };
                 }
 
-                //TODO Add real field values
-                existingDictionary?.Keys.Add(DictionarySerializerGenericExtensions.GetFieldValue(type1, newEntryKey));
-                existingDictionary?.Values.Add(DictionarySerializerGenericExtensions.GetFieldValue(type2, newEntryValue));
+                existingDictionary.Keys.Add(DictionarySerializerGenericExtensions.GetFieldValue(type1, newEntryKey));
+                existingDictionary.Values.Add(DictionarySerializerGenericExtensions.GetFieldValue(type2, newEntryValue));
 
-                existingScript?.Dictionaries.RemoveAll(x => x.DictionaryName == dictField.Name);
-                existingScript?.Dictionaries.Add(existingDictionary.Value);
+                existingScript.Dictionaries.RemoveAll(x => x.DictionaryName == dictField.Name);
+                existingScript.Dictionaries.Add(existingDictionary);
 
-                SerializerInterface.SaveData(existingScript.Value);
+                data.DataList.RemoveAll(x => x.ScriptInstanceId == script.GetInstanceID());
+                data.DataList.Add(existingScript);
+
+                SerializerInterface.SaveData(data);
             };
 
             listView.hierarchy.Add(addButton);
