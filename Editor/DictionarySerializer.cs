@@ -33,6 +33,7 @@ namespace DSerializer
             var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/DictionarySerializer.uxml");
             _uxmlTree = visualTree.Instantiate();
 
+            //TODO add choice to select which monobehaviour
             _uxmlTree.Query<ObjectField>("field").First().RegisterValueChangedCallback(
                 (changeEvent) =>
                 {
@@ -62,6 +63,22 @@ namespace DSerializer
         }
 
 
+        private VisualElement MakeDeletableEntry(VisualElement field1, VisualElement field2)
+        {
+            var element = new VisualElement();
+            element.AddToClassList("entry");
+
+            element.Add(field1);
+            element.Add(field2);
+
+            var removeBtn = new Button();
+            removeBtn.Add(new Label("-"));
+
+            element.Add(removeBtn);
+
+            return element;
+        }
+
         private VisualElement MakeEntry(VisualElement field1, VisualElement field2)
         {
             var element = new VisualElement();
@@ -71,6 +88,13 @@ namespace DSerializer
             element.Add(field2);
 
             return element;
+        }
+
+        private VisualElement MakeSpace()
+        {
+            var space = new VisualElement();
+            space.name = "space";
+            return space;
         }
 
         //TODO Might need to move to monobehavior for in-game update
@@ -94,17 +118,14 @@ namespace DSerializer
             for(int i = 0; i < existingDictionary.Keys.Count; i++)
             {
                 listView.hierarchy.Add(
-                    MakeEntry(
+                    MakeDeletableEntry(
                         DictionarySerializerGenericExtensions.SetUpField(type1, existingDictionary.Keys[i]),
                         DictionarySerializerGenericExtensions.SetUpField(type2, existingDictionary.Values[i])
                         )
                     );
             }
 
-            var space = new VisualElement();
-            space.name = "space";
-
-            listView.hierarchy.Add(space);
+            listView.hierarchy.Add(MakeSpace());
             listView.hierarchy.Add(new Label("Add New: "));
 
             var newEntryKey = DictionarySerializerGenericExtensions.SetUpField(type1, 0);
@@ -117,8 +138,17 @@ namespace DSerializer
             {
                 //TODO remove constant saving and add an APPLY button to save changes
 
-                existingDictionary.Keys.Add(DictionarySerializerGenericExtensions.GetFieldValue(type1, newEntryKey));
-                existingDictionary.Values.Add(DictionarySerializerGenericExtensions.GetFieldValue(type2, newEntryValue));
+                var keyValue = DictionarySerializerGenericExtensions.GetFieldValue(type1, newEntryKey);
+                var valueValue = DictionarySerializerGenericExtensions.GetFieldValue(type2, newEntryValue);
+
+                if(existingDictionary.Keys.Contains(keyValue))
+                {
+                    Debug.Log("Key already exists");
+                    return;
+                }
+
+                existingDictionary.Keys.Add(keyValue);
+                existingDictionary.Values.Add(valueValue);
 
                 existingScript.Dictionaries.RemoveAll(x => x.DictionaryName == dictField.Name);
                 existingScript.Dictionaries.Add(existingDictionary);
